@@ -1,6 +1,5 @@
-name: docker action test
+name: docker_action_test
 
-# main 브랜치에 push하거나 태그를 붙일 때 실행
 on:
   push:
     branches:
@@ -12,7 +11,6 @@ env:
   ROS_DISTRO: jazzy
 
 jobs:
-  # ── Job 1: ROS Jazzy만 설치된 이미지 ──────────────────────────────────────
   build-ros-only:
     name: Build ROS-only image
     runs-on: ubuntu-latest
@@ -54,7 +52,6 @@ jobs:
           build-args: |
             ROS_DISTRO=${{ env.ROS_DISTRO }}
 
-  # ── Job 2: Gazebo Harmonic만 설치된 이미지 ────────────────────────────────
   build-gazebo-only:
     name: Build Gazebo-only image
     runs-on: ubuntu-latest
