@@ -1,4 +1,4 @@
-name: Build and Push Docker Images to Docker Hub
+name: docker action test
 
 # main 브랜치에 push하거나 태그를 붙일 때 실행
 on:
