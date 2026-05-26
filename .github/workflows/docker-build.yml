@@ -1,0 +1,95 @@
+name: Build and Push Docker Images to Docker Hub
+
+# main 브랜치에 push하거나 태그를 붙일 때 실행
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+env:
+  ROS_DISTRO: jazzy
+
+jobs:
+  # ── Job 1: ROS Jazzy만 설치된 이미지 ──────────────────────────────────────
+  build-ros-only:
+    name: Build ROS-only image
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate image metadata (tags & labels)
+        id: meta-ros
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/ros-jazzy-only
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push ROS-only image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .docker/ros-only.dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta-ros.outputs.tags }}
+          labels: ${{ steps.meta-ros.outputs.labels }}
+          build-args: |
+            ROS_DISTRO=${{ env.ROS_DISTRO }}
+
+  # ── Job 2: Gazebo Harmonic만 설치된 이미지 ────────────────────────────────
+  build-gazebo-only:
+    name: Build Gazebo-only image
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate image metadata (tags & labels)
+        id: meta-gazebo
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/gazebo-harmonic-only
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Gazebo-only image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .docker/gazebo-only.dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta-gazebo.outputs.tags }}
+          labels: ${{ steps.meta-gazebo.outputs.labels }}
